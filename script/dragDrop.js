@@ -5,35 +5,55 @@ export default class {
 	onDragMove() { }
 	onDragEnd() { }
 
+	constructor(referencePoint) {
+		this.boundingBox = referencePoint.getBoundingClientRect();
+	}
+
 	// Handle event that should start dragging (e.g. mousedown, touchstart)
 	handleDragStart(startEvent) {
 
-		// Define movement tracker
-		let tracker = moveEvent => this.onDragMove(moveEvent);
-
 		// For touch events
 		if (startEvent instanceof TouchEvent) {
+			
+			// Store touch index
+			let touchIndex = startEvent.changedTouches[0].identifier;
+
+			// Define movement tracker
+			let tracker = moveEvent => {
+				this.onDragMove(...this.getCoordinates(moveEvent.changedTouches[index]));
+
+				// Prevent scrolling by touch
+				moveEvent.preventDefault();
+			}
 
 			// Invoke starting handler
-			this.onDragStart(startEvent);
+			this.onDragStart(...this.getCoordinates(startEvent.changedTouches[index]));
 
 			// Start movement tracker
-			document.addEventListener('touchmove', tracker);
+			document.addEventListener('touchmove', tracker, { passive: false });
 
 			// Stop movement handler when dragging is stopped
 			document.addEventListener('touchend', endEvent => {
 				document.removeEventListener('touchmove', tracker);
 
 				// Invoke stopping handler
-				this.onDragEnd(endEvent);
+				this.onDragEnd(...this.getCoordinates(endEvent.changedTouches[index]));
 			}, { once: true });
 		}
 
 		// For left mouse clicks
 		if (startEvent instanceof MouseEvent && startEvent.which === 1) {
 
+			// Define movement tracker
+			let tracker = moveEvent => {
+				this.onDragMove(...this.getCoordinates(moveEvent));
+
+				// Prevent selecting text
+				moveEvent.preventDefault();
+			}
+
 			// Invoke starting handler
-			this.onDragStart(startEvent);
+			this.onDragStart(...this.getCoordinates(startEvent));
 
 			// Start movement tracker
 			document.addEventListener('mousemove', tracker);
@@ -44,7 +64,7 @@ export default class {
 				document.removeEventListener('mousemove', tracker);
 
 				// Invoke stopping handler
-				this.onDragEnd(endEvent);
+				this.onDragEnd(...this.getCoordinates(endEvent));
 			}, { once: true });
 		}
 	}
@@ -53,5 +73,10 @@ export default class {
 	bindTo(element) {
 		element.addEventListener('touchstart', this.handleDragStart.bind(this));
 		element.addEventListener('mousedown', this.handleDragStart.bind(this));
+	}
+
+	// Transform emitter position to local coordinates
+	getCoordinates(e) {
+		return [e.pageX - Math.round(this.boundingBox.x), e.pageY - Math.round(this.boundingBox.y)];
 	}
 }

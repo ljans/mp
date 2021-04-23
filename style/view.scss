@@ -11,6 +11,13 @@ body {
 	&.dragging robot-frame { cursor: grabbing; }
 }
 
+robot-frame {
+	position: relative;
+	cursor: grab;
+
+	img { display: block; }
+}
+
 .ui {
 	padding: 40px 30px;
 	display: flex;
@@ -25,13 +32,13 @@ body {
 	background-color: #FFF;
 }
 
-#workspace { position: relative; }
+.workspace {
+	position: relative;
 
-robot-frame {
-	position: absolute;
-	cursor: grab;
-
-	img { display: block; }
+	robot-frame {
+		position: absolute;
+		z-index: 1;
+	}
 }
 
 .sidebar {
@@ -49,8 +56,6 @@ robot-frame {
 			padding: 20px;
 			border-radius: 5px;
 			border: 2px dashed $border;
-
-			robot-frame { position: relative; }
 		}
 
 		span { padding: 6px 0; }
