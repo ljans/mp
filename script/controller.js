@@ -1,26 +1,21 @@
+import BitmapCanvas from './bitmapCanvas.js';
+
 export default class {
 
 	// Setup canvases
-	async prepare() {
-		this.environment = await this.drawCanvas('./image/environment.bmp');
-		this.robot = await this.drawCanvas('./image/robot.bmp');
+	constructor() {
+		this.environment = new BitmapCanvas('./image/environment.bmp');
+		this.robot = new BitmapCanvas('./image/robot.bmp');
 	}
 
-	// Draw canvas from bitmap source file
-	async drawCanvas(src) {
-
-		// Load image
-		let image = new Image();
-		image.src = src;
-		await image.decode();
-
-		// Draw into canvas
-		let canvas = document.createElement('canvas');
-		canvas.width = image.width;
-		canvas.height = image.height;
-		canvas.context = canvas.getContext('2d');
-		canvas.context.drawImage(image, 0, 0);
-		return canvas;
+	// Preparation
+	async prepare() {
+		await this.environment.load();
+		await this.robot.load();
+		
+		// Robot preprocessing
+		this.robot.findBorder();
+		this.robot.crop();
 	}
 
 	// Check if robot can be placed at (x,y) in environment

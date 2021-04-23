@@ -19,7 +19,7 @@ export default class View {
 
 		// Draw environment image
 		this.environment = document.querySelector('#environment');
-		this.environment.src = this.controller.environment.toDataURL();
+		this.environment.src = this.controller.environment.canvas.toDataURL();
 
 		// For each robot index
 		for (let index in [View.INIT_CONFIG, View.GOAL_CONFIG]) {
@@ -31,7 +31,7 @@ export default class View {
 
 			// Draw robot image
 			let image = new Image();
-			image.src = this.controller.robot.toDataURL();
+			image.src = this.controller.robot.canvas.toDataURL();
 			this.blueprints[index].appendChild(image);
 
 			// Setup drag-and-drop and bind to blueprint
