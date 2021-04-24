@@ -18,15 +18,15 @@ export default class {
 		if (startEvent instanceof TouchEvent) {
 
 			// Store starting touch and invoke starting handler
-			let startingTouch = startEvent.changedTouches[0];
+			let startingTouch = startEvent.changedTouches[startEvent.changedTouches.length - 1];
 			this.onDragStart(...this.getCoordinates(startingTouch));
 
 			// Define movement tracker
 			let tracker = moveEvent => {
 
 				// Invoke movement handler on corresponding touch
-				for(let touch of moveEvent.touches) {
-					if(touch.identifier == startingTouch.identifier) this.onDragMove(...this.getCoordinates(touch));
+				for (let touch of moveEvent.touches) {
+					if (touch.identifier == startingTouch.identifier) this.onDragMove(...this.getCoordinates(touch));
 				}
 
 				// Prevent scrolling by touch
@@ -40,9 +40,9 @@ export default class {
 			document.addEventListener('touchend', endEvent => {
 
 				// Invoke movement handler on matching touch
-				for(let touch of endEvent.changedTouches) {
-					if(touch.identifier == startingTouch.identifier) {
-						
+				for (let touch of endEvent.changedTouches) {
+					if (touch.identifier == startingTouch.identifier) {
+
 						// Stop movement tracker and invoke ending handler
 						document.removeEventListener('touchmove', tracker);
 						this.onDragEnd(...this.getCoordinates(touch));
