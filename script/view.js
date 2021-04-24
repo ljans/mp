@@ -57,6 +57,32 @@ export default class View {
 				this.trackMouse(index, x, y);
 			}
 
+			// When moving the robot
+			robotDragDrop.onDragMove = (x, y) => {
+
+				// Let robot follow the movement and check whether its position is valid
+				this.trackMouse(index, x, y);
+				this.robots[index].classList.toggle('colliding', !this.isValidPosition(index, x, y));
+			}
+
+			// When dragging the robot is ended
+			robotDragDrop.onDragEnd = (x, y) => {
+
+				// Reset the dragging state
+				document.body.classList.remove('dragging');
+
+				// Store a valid drop location
+				if (this.isValidPosition(index, x, y)) {
+					this.robots[index].x = x;
+					this.robots[index].y = y;
+
+					// Or despawn misplaced robot
+				} else {
+					this.despawn(this.robots[index]);
+					delete this.robots[index];
+				}
+			}
+
 			// When dragging the blueprint is started
 			blueprintDragDrop.onDragStart = (x, y) => {
 
@@ -76,31 +102,9 @@ export default class View {
 				robotDragDrop.onDragStart(x, y);
 			}
 
-			// When moving the robot
-			blueprintDragDrop.onDragMove = robotDragDrop.onDragMove = (x, y) => {
-
-				// Let robot follow the movement and check whether its position is valid
-				this.trackMouse(index, x, y);
-				this.robots[index].classList.toggle('colliding', !this.isValidPosition(index, x, y));
-			}
-
-			// When dragging the robot is ended
-			blueprintDragDrop.onDragEnd = robotDragDrop.onDragEnd = (x, y) => {
-
-				// Reset the dragging state
-				document.body.classList.remove('dragging');
-
-				// Store a valid drop location
-				if (this.isValidPosition(index, x, y)) {
-					this.robots[index].x = x;
-					this.robots[index].y = y;
-
-					// Or despawn misplaced robot
-				} else {
-					this.despawn(this.robots[index]);
-					delete this.robots[index];
-				}
-			}
+			// Bubble move and end events from blueprint to robot
+			blueprintDragDrop.onDragMove = (x,y) => robotDragDrop.onDragMove(x,y);
+			blueprintDragDrop.onDragEnd = (x,y) => robotDragDrop.onDragEnd(x,y);
 		}
 	}
 
