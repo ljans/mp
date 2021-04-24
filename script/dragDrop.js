@@ -22,14 +22,14 @@ export default class {
 
 			// Define movement tracker
 			let tracker = moveEvent => {
-				this.onDragMove(...this.getTouchCoordinates(moveEvent, identifier));
+				this.onDragMove(...this.getTouchCoordinates(moveEvent.touches, identifier));
 
 				// Prevent scrolling by touch
 				moveEvent.preventDefault();
 			}
 
 			// Invoke starting handler
-			this.onDragStart(...this.getTouchCoordinates(startEvent, identifier));
+			this.onDragStart(...this.getTouchCoordinates(startEvent.changedTouches, identifier));
 
 			// Start movement tracker
 			document.addEventListener('touchmove', tracker, { passive: false });
@@ -39,7 +39,7 @@ export default class {
 				document.removeEventListener('touchmove', tracker);
 
 				// Invoke stopping handler
-				this.onDragEnd(...this.getTouchCoordinates(endEvent, identifier));
+				this.onDragEnd(...this.getTouchCoordinates(endEvent.changedTouches, identifier));
 			}, { once: true });
 		}
 
@@ -86,8 +86,8 @@ export default class {
 	}
 
 	// Transform touch event to local coordinates
-	getTouchCoordinates(e, identifier) {
-		for(let touch of e.changedTouches) {
+	getTouchCoordinates(touchList, identifier) {
+		for(let touch of touchList) {
 			if(touch.identifier == identifier) return this.getCoordinates(touch);
 		}
 	}
