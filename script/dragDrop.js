@@ -5,8 +5,10 @@ export default class {
 	onDragMove() { }
 	onDragEnd() { }
 
-	constructor(referencePoint) {
-		this.boundingBox = referencePoint.getBoundingClientRect();
+	// Get bounding box of reference element
+	constructor(referenceElement) {
+		this.boundingBox = referenceElement.getBoundingClientRect();
+		window.addEventListener('resize', () => { this.boundingBox = referenceElement.getBoundingClientRect(); });
 	}
 
 	// Handle event that should start dragging (e.g. mousedown, touchstart)
@@ -14,20 +16,20 @@ export default class {
 
 		// For touch events
 		if (startEvent instanceof TouchEvent) {
-			
+
 			// Store touch index
 			let touchIndex = startEvent.changedTouches[0].identifier;
 
 			// Define movement tracker
 			let tracker = moveEvent => {
-				this.onDragMove(...this.getCoordinates(moveEvent.changedTouches[index]));
+				this.onDragMove(...this.getCoordinates(moveEvent.changedTouches[touchIndex]));
 
 				// Prevent scrolling by touch
 				moveEvent.preventDefault();
 			}
 
 			// Invoke starting handler
-			this.onDragStart(...this.getCoordinates(startEvent.changedTouches[index]));
+			this.onDragStart(...this.getCoordinates(startEvent.changedTouches[touchIndex]));
 
 			// Start movement tracker
 			document.addEventListener('touchmove', tracker, { passive: false });
@@ -37,7 +39,7 @@ export default class {
 				document.removeEventListener('touchmove', tracker);
 
 				// Invoke stopping handler
-				this.onDragEnd(...this.getCoordinates(endEvent.changedTouches[index]));
+				this.onDragEnd(...this.getCoordinates(endEvent.changedTouches[touchIndex]));
 			}, { once: true });
 		}
 
@@ -77,6 +79,9 @@ export default class {
 
 	// Transform emitter position to local coordinates
 	getCoordinates(e) {
-		return [e.pageX - Math.round(this.boundingBox.x), e.pageY - Math.round(this.boundingBox.y)];
+		return [
+			e.pageX - Math.round(this.boundingBox.x),
+			e.pageY - Math.round(this.boundingBox.y)
+		];
 	}
 }
