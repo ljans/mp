@@ -18,7 +18,7 @@ export default class {
 		if (startEvent instanceof TouchEvent) {
 
 			// Store starting touch and invoke starting handler
-			let startingTouch = startEvent.changedTouches[startEvent.changedTouches.length - 1];
+			let startingTouch = startEvent.targetTouches[0];
 			this.onDragStart(...this.getCoordinates(startingTouch));
 
 			// Define movement tracker
