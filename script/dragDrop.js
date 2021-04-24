@@ -33,14 +33,12 @@ export default class {
 				moveEvent.preventDefault();
 			}
 
-			// Start movement tracker if there was no touch before
-			if(startEvent.touches.length === 1) document.addEventListener('touchmove', tracker, { passive: false });
+			// Start movement tracker
+			document.addEventListener('touchmove', tracker, { passive: false });
 
-			// Wenn a touch is ending
+			// Stop movement tracker when touch ended
 			document.addEventListener('touchend', endEvent => {
-
-				// Stop movement tracker if there are no more touches
-				if(endEvent.touches.length === 0) document.removeEventListener('touchmove', tracker);
+				document.removeEventListener('touchmove', tracker);
 
 				// Invoke movement handler on matching touch
 				for(let touch of endEvent.changedTouches) {
