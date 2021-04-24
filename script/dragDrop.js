@@ -17,34 +17,43 @@ export default class {
 		// For touch events
 		if (startEvent instanceof TouchEvent) {
 
-			// Store touch index
-			let identifier = startEvent.changedTouches[0].identifier;
+			// Store starting touch and invoke starting handler
+			let startingTouch = startEvent.changedTouches[0];
+			this.onDragStart(...this.getCoordinates(startingTouch));
 
 			// Define movement tracker
 			let tracker = moveEvent => {
-				this.onDragMove(...this.getTouchCoordinates(moveEvent.touches, identifier));
+
+				// Invoke movement handler on matching touch
+				for(let touch of moveEvent.touches) {
+					if(touch.identifier == startingTouch.identifier) this.onDragMove(...this.getCoordinates(touch));
+				}
 
 				// Prevent scrolling by touch
 				moveEvent.preventDefault();
 			}
 
-			// Invoke starting handler
-			this.onDragStart(...this.getTouchCoordinates(startEvent.changedTouches, identifier));
+			// Start movement tracker if there was no touch before
+			if(startEvent.touches.length == startEvent.changedTouches.length) document.addEventListener('touchmove', tracker, { passive: false });
 
-			// Start movement tracker
-			document.addEventListener('touchmove', tracker, { passive: false });
-
-			// Stop movement handler when dragging is stopped
+			// Wenn a touch is ending
 			document.addEventListener('touchend', endEvent => {
-				document.removeEventListener('touchmove', tracker);
 
-				// Invoke stopping handler
-				this.onDragEnd(...this.getTouchCoordinates(endEvent.changedTouches, identifier));
+				// Stop movement tracker if there are no more touches
+				if(!endEvent.touches.length) document.removeEventListener('touchmove', tracker);
+
+				// Invoke movement handler on matching touch
+				for(let touch of endEvent.changedTouches) {
+					if(touch.identifier == startingTouch.identifier) this.onDragEnd(...this.getCoordinates(touch));
+				}
 			}, { once: true });
 		}
 
 		// For left mouse clicks
 		if (startEvent instanceof MouseEvent && startEvent.which === 1) {
+
+			// Invoke starting handler
+			this.onDragStart(...this.getCoordinates(startEvent));
 
 			// Define movement tracker
 			let tracker = moveEvent => {
@@ -53,9 +62,6 @@ export default class {
 				// Prevent selecting text
 				moveEvent.preventDefault();
 			}
-
-			// Invoke starting handler
-			this.onDragStart(...this.getCoordinates(startEvent));
 
 			// Start movement tracker
 			document.addEventListener('mousemove', tracker);
@@ -83,12 +89,5 @@ export default class {
 			e.pageX - Math.round(this.boundingBox.x),
 			e.pageY - Math.round(this.boundingBox.y)
 		];
-	}
-
-	// Transform touch event to local coordinates
-	getTouchCoordinates(touchList, identifier) {
-		for(let touch of touchList) {
-			if(touch.identifier == identifier) return this.getCoordinates(touch);
-		}
 	}
 }
