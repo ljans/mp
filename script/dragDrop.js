@@ -24,7 +24,7 @@ export default class {
 			// Define movement tracker
 			let tracker = moveEvent => {
 
-				// Invoke movement handler on matching touch
+				// Invoke movement handler on corresponding touch
 				for(let touch of moveEvent.touches) {
 					if(touch.identifier == startingTouch.identifier) this.onDragMove(...this.getCoordinates(touch));
 				}
@@ -36,13 +36,17 @@ export default class {
 			// Start movement tracker
 			document.addEventListener('touchmove', tracker, { passive: false });
 
-			// Stop movement tracker when touch ended
+			// When corresponding touch is ended
 			document.addEventListener('touchend', endEvent => {
-				document.removeEventListener('touchmove', tracker);
 
 				// Invoke movement handler on matching touch
 				for(let touch of endEvent.changedTouches) {
-					if(touch.identifier == startingTouch.identifier) this.onDragEnd(...this.getCoordinates(touch));
+					if(touch.identifier == startingTouch.identifier) {
+						
+						// Stop movement tracker and invoke ending handler
+						document.removeEventListener('touchmove', tracker);
+						this.onDragEnd(...this.getCoordinates(touch));
+					}
 				}
 			}, { once: true });
 		}
@@ -64,12 +68,12 @@ export default class {
 			// Start movement tracker
 			document.addEventListener('mousemove', tracker);
 
-			// Stop movement handler when dragging is stopped
+			// When dragging is ended
 			document.addEventListener('mouseup', endEvent => {
 				if (endEvent.which !== 1) return;
-				document.removeEventListener('mousemove', tracker);
 
-				// Invoke stopping handler
+				// Stop movement tracker and invoke ending handler
+				document.removeEventListener('mousemove', tracker);
 				this.onDragEnd(...this.getCoordinates(endEvent));
 			}, { once: true });
 		}

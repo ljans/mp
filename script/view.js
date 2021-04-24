@@ -84,7 +84,7 @@ export default class View {
 				this.robots[index].classList.toggle('colliding', !this.isValidPosition(index, x, y));
 			}
 
-			// When dragging the robot is stopped
+			// When dragging the robot is ended
 			blueprintDragDrop.onDragEnd = robotDragDrop.onDragEnd = (x, y) => {
 
 				// Reset the dragging state
