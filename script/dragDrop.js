@@ -5,20 +5,20 @@ export default class {
 		this.boundingBox = referenceElement.getBoundingClientRect();
 		window.addEventListener('resize', () => { this.boundingBox = referenceElement.getBoundingClientRect(); });
 
-		// Initialize list of known active touches
-		this.touches = [];
+		// Initialize observed touches
+		this.touches = {};
 
 		// Register handler for moving a touch
 		document.addEventListener('touchmove', moveEvent => {
 			for(let changedTouch of moveEvent.changedTouches) {
 
-				// Invoke movement handler and prevent scrolling if touch is known
+				// Invoke movement handler if touch is observed
 				let handlers = this.touches[changedTouch.identifier];
-				if(handlers) {
-					handlers.onDragMove(this.getCoordinates(changedTouch));
-					moveEvent.preventDefault();
-				}
+				if(handlers) handlers.onDragMove(this.getCoordinates(changedTouch));
 			}
+
+			// Prevent scrolling if any touch is observed
+			if(Object.keys(this.touches).length > 0) moveEvent.preventDefault();
 		}, {passive: false});
 
 		// Register handler for ending a touch
@@ -31,11 +31,11 @@ export default class {
 					if(changedTouch.identifier == touch.identifier) ended = false;
 				}
 
-				// Invoke ending handler for ended known touch and remove it from the list
+				// Stop observing touch and invoke ending handler
 				let handlers = this.touches[changedTouch.identifier];
 				if(ended && handlers) {
-					handlers.onDragEnd(this.getCoordinates(changedTouch));
 					delete this.touches[changedTouch.identifier];
+					handlers.onDragEnd(this.getCoordinates(changedTouch));
 				}
 			}
 		});
@@ -48,7 +48,7 @@ export default class {
 		element.addEventListener('touchstart', startEvent => {
 			for(let touch of startEvent.changedTouches) {
 
-				// Invoke starting handler on newly started (unknown) touch and add it to the list
+				// Start observing new touch and invoke starting handler
 				if(!this.touches[touch.identifier]) {
 					this.touches[touch.identifier] = handlers;
 					handlers.onDragStart(this.getCoordinates(touch));
