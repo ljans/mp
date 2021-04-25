@@ -5,3 +5,4 @@ const controller = new Controller();
 await controller.prepare();
 
 const view = new View(controller);
+await view.prepare();
