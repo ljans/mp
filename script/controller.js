@@ -24,7 +24,7 @@ export default class {
 	}
 
 	// Check if robot can be placed at (x,y) in environment
-	isFree(x, y) {
+	isFree({x, y}) {
 
 		// Extract relevant square from environment
 		let environmentData = this.environment.context.getImageData(
