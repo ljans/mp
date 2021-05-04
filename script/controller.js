@@ -14,8 +14,21 @@ export default class {
 		await this.robot.load();
 		
 		// Robot preprocessing
-		this.robot.findBorder();
-		this.robot.crop();
+		this.robot.extractBinary();
+		this.robot.detectBorder();
+		
+		// Extract whole pixel rectangle
+		let image = this.robot.context.getImageData(0, 0, this.robot.width, this.robot.height);
+
+		// Color border pixels in rgb(255,0,0)
+		for(let border of this.robot.border) {
+			image.data[border * 4] = 255;
+			image.data[border * 4 + 1] = 0;
+			image.data[border * 4 + 2] = 0;
+		}
+
+		// Apply changes
+		this.robot.context.putImageData(image, 0, 0);
 	}
 
 	// Check if robot can be placed at (x,y) in environment
