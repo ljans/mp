@@ -108,11 +108,11 @@ export default class View {
 	isValidPosition(index, e) {
 		let [x, y] = this.getRelativeCoordinates(e.pageX, e.pageY);
 
-		// Return wheter robot is inside environment and free
+		// Return whether robot is inside environment and free of collision
 		return (
 			0 < x && x < this.environment.width &&
 			0 < y && y < this.environment.height
-		) ? this.controller.isFree(x, y) : false;
+		) ? !this.controller.isColliding(x, y) : false;
 	}
 
 	// Transform page coordinates to environment coordinates

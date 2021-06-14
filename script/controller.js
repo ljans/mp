@@ -12,19 +12,20 @@ export default class {
 	async prepare() {
 		await this.environment.load();
 		await this.robot.load();
-		
+
 		// Robot preprocessing
 		this.robot.extractBinary();
 		this.robot.detectBorder();
-		
+
 		// Extract whole pixel rectangle
 		let image = this.robot.context.getImageData(0, 0, this.robot.width, this.robot.height);
 
-		// Color border pixels in rgb(255,0,0)
-		for(let border of this.robot.border) {
-			image.data[border * 4] = 255;
-			image.data[border * 4 + 1] = 0;
-			image.data[border * 4 + 2] = 0;
+		// Crop to border
+		for (let i = 0; i < this.robot.height; i++) {
+			for (let j = 0; j < this.robot.width; j++) {
+				let index = i * this.robot.width + j;
+				if (!this.robot.context.isPointInPath(this.robot.contour, i, j)) image.data[4 * index + 3] = 0;
+			}
 		}
 
 		// Apply changes
@@ -32,7 +33,7 @@ export default class {
 	}
 
 	// Check if robot can be placed at (x,y) in environment
-	isFree(x, y) {
+	isColliding(x, y) {
 
 		// Extract relevant square from environment
 		let environmentData = this.environment.context.getImageData(
@@ -42,23 +43,13 @@ export default class {
 			this.robot.height
 		);
 
-		// Extract complete robot square
-		let robotData = this.robot.context.getImageData(0, 0, this.robot.width, this.robot.height);
+		// Iterate over all border pixels
+		for (let index of this.robot.border) {
 
-		// Iterate over all robot pixels
-		for (let i = 0; i < this.robot.width * this.robot.height * 4; i += 4) {
-
-			// Extract RGB data
-			let [robotR, robotG, robotB, robotA] = robotData.data.slice(i, i + 3);
-			let [environmentR, environmentG, environmentB, environmentA] = environmentData.data.slice(i, i + 3);
-
-			// Determine if pixels are black
+			// Check for an obstacle
+			let [r, g, b, a] = environmentData.data.slice(4*index, 4*index + 3);
 			let threshold = 200;
-			let robotIsBlack = robotR < threshold && robotG < threshold && robotB < threshold;
-			let environmentIsBlack = environmentR < threshold && environmentG < threshold && environmentB < threshold;
-
-			// Check if black pixels overlap
-			if (robotIsBlack && environmentIsBlack) return false;
-		} return true;
+			if(r < threshold && g < threshold && b < threshold) return true;
+		}
 	}
 }

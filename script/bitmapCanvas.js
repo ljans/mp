@@ -27,11 +27,16 @@ export default class {
 
 		// Read pixel by pixel
 		for (let i = 0; i < this.height * this.width; i++) {
-			let [R, G, B, a] = image.data.slice(4*i, 4*(i+1));
+			let [R, G, B, a] = image.data.slice(4 * i, 4 * (i + 1));
 
 			// Convert to binary pixel
 			this.binary[i] = R == 255 && G == 255 && B == 255 && a == 255;
 		}
+	}
+
+	// Calculate (x,y) coordinates from bitmap index
+	toXY(index) {
+		return [index % this.width, Math.floor(index / this.width)];
 	}
 
 	// Detect outer object border in the binary image
@@ -45,25 +50,26 @@ export default class {
 		 * 3: bottom
 		 */
 		let neighborhood = 4;
-		
+
 		// Find first border pixel and the direction coming from
 		this.border = [0];
-		while(this.binary[this.border[0]]) this.border[0]++;
+		while (this.binary[this.border[0]]) this.border[0]++;
 		let from = 2;
+
+		// Initialize contour
+		this.contour = new Path2D();
+		this.contour.moveTo(...this.toXY(this.border[0]));
 
 		// Loop for finding all border pixels
 		// (The border is never longer than the total amount of pixels, so an infinte loop is prevented in case something wents wrong)
-		findingBorder: for(let iteration=0; iteration<this.height*this.width; iteration++) {
+		findingBorder: for (let iteration = 0; iteration < this.height * this.width; iteration++) {
 
 			// Get the most recently found border pixel
 			let last = this.border[this.border.length - 1];
-
-			// Calculate current position
-			let columnIndex = last % this.width;
-			let rowIndex = Math.floor(last / this.width);
+			let [columnIndex, rowIndex] = this.toXY(last);
 
 			// Search adjacent border pixel by iterating counter-clockwise from the starting direction over all other directions
-			for(let skip=1; skip<neighborhood; skip++) {
+			for (let skip = 1; skip < neighborhood; skip++) {
 
 				// Variable for the next pixel candidate
 				let check;
@@ -72,16 +78,16 @@ export default class {
 				let search = (from + skip) % neighborhood;
 
 				// Find the pixel in the search direction (if still inside the picture)
-				if(search === 0 && columnIndex < this.width - 1) check = last + 1;
-				if(search === 1 && rowIndex > 0) check = last - this.width;
-				if(search === 2 && columnIndex > 0) check = last - 1;
-				if(search === 3 && rowIndex < this.height - 1) check = last + this.width;
+				if (search === 0 && columnIndex < this.width - 1) check = last + 1;
+				if (search === 1 && rowIndex > 0) check = last - this.width;
+				if (search === 2 && columnIndex > 0) check = last - 1;
+				if (search === 3 && rowIndex < this.height - 1) check = last + this.width;
 
 				// If the checked pixel is black
-				if(this.binary[check] === false) {
+				if (this.binary[check] === false) {
 
 					// Terminate searching if the start is reached again
-					if(
+					if (
 						this.border.length > 2 &&
 						last === this.border[0] &&
 						check === this.border[1]
@@ -92,9 +98,10 @@ export default class {
 
 					// Store the border pixel
 					this.border[this.border.length] = check;
+					this.contour.lineTo(...this.toXY(check));
 
 					// For the next pixel, we are coming from the opposite of the current search direction
-					from = (search + neighborhood/2) % neighborhood;
+					from = (search + neighborhood / 2) % neighborhood;
 					break;
 				}
 			}
