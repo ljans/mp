@@ -1,30 +1,39 @@
+import BitmapCanvas from './bitmapCanvas.js';
+
 export default class {
 
 	// Setup canvases
-	async prepare() {
-		this.environment = await this.drawCanvas('./image/environment.bmp');
-		this.robot = await this.drawCanvas('./image/robot.bmp');
+	constructor() {
+		this.environment = new BitmapCanvas('./image/environment.bmp');
+		this.robot = new BitmapCanvas('./image/robot.bmp');
 	}
 
-	// Draw canvas from bitmap source file
-	async drawCanvas(src) {
+	// Preparation
+	async prepare() {
+		await this.environment.load();
+		await this.robot.load();
 
-		// Load image
-		let image = new Image();
-		image.src = src;
-		await image.decode();
+		// Robot preprocessing
+		this.robot.extractBinary();
+		this.robot.detectBorder();
 
-		// Draw into canvas
-		let canvas = document.createElement('canvas');
-		canvas.width = image.width;
-		canvas.height = image.height;
-		canvas.context = canvas.getContext('2d');
-		canvas.context.drawImage(image, 0, 0);
-		return canvas;
+		// Extract whole pixel rectangle
+		let image = this.robot.context.getImageData(0, 0, this.robot.width, this.robot.height);
+
+		// Crop to border
+		for (let i = 0; i < this.robot.height; i++) {
+			for (let j = 0; j < this.robot.width; j++) {
+				let index = i * this.robot.width + j;
+				if (!this.robot.context.isPointInPath(this.robot.contour, i, j)) image.data[4 * index + 3] = 0;
+			}
+		}
+
+		// Apply changes
+		this.robot.context.putImageData(image, 0, 0);
 	}
 
 	// Check if robot can be placed at (x,y) in environment
-	isFree({x, y}) {
+	isColliding({x, y}) {
 
 		// Extract relevant square from environment
 		let environmentData = this.environment.context.getImageData(
@@ -34,23 +43,13 @@ export default class {
 			this.robot.height
 		);
 
-		// Extract complete robot square
-		let robotData = this.robot.context.getImageData(0, 0, this.robot.width, this.robot.height);
+		// Iterate over all border pixels
+		for (let index of this.robot.border) {
 
-		// Iterate over all robot pixels
-		for (let i = 0; i < this.robot.width * this.robot.height * 4; i += 4) {
-
-			// Extract RGB data
-			let [robotR, robotG, robotB, robotA] = robotData.data.slice(i, i + 3);
-			let [environmentR, environmentG, environmentB, environmentA] = environmentData.data.slice(i, i + 3);
-
-			// Determine if pixels are black
+			// Check for an obstacle
+			let [r, g, b, a] = environmentData.data.slice(4*index, 4*index + 3);
 			let threshold = 200;
-			let robotIsBlack = robotR < threshold && robotG < threshold && robotB < threshold;
-			let environmentIsBlack = environmentR < threshold && environmentG < threshold && environmentB < threshold;
-
-			// Check if black pixels overlap
-			if (robotIsBlack && environmentIsBlack) return false;
-		} return true;
+			if(r < threshold && g < threshold && b < threshold) return true;
+		}
 	}
 }

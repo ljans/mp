@@ -45,8 +45,8 @@ export default class View {
 	async prepare() {
 
 		// Draw environment image
-		this.environment = this.workspace.querySelector('.environment');
-		this.environment.src = this.controller.environment.toDataURL();
+		this.environment = document.querySelector('.environment');
+		this.environment.src = this.controller.environment.canvas.toDataURL();
 		await this.environment.decode();
 
 		// For each robot index
@@ -59,7 +59,8 @@ export default class View {
 
 			// Draw blueprint image
 			let image = new Image();
-			image.src = this.controller.robot.toDataURL();
+			image.src = this.controller.robot.canvas.toDataURL();
+			await image.decode();
 			this.blueprints[index].appendChild(image);
 
 			// Bind drag and drop to blueprint
@@ -97,7 +98,7 @@ export default class View {
 	despawn(robot) { this.workspace.removeChild(robot); }
 
 	// Place robot at (x,y)
-	trackMouse(index, {x, y}) {
+	trackMouse(index, { x, y }) {
 		this.robots[index].style.left = x + 'px';
 		this.robots[index].style.top = y + 'px';
 	}
@@ -105,10 +106,10 @@ export default class View {
 	// Check if robot can be placed at (x,y)
 	isValidPosition(index, {x, y}) {
 
-		// Return wheter robot is inside environment and free
+		// Return whether robot is inside environment and free of collision
 		return (
 			0 < x && x < this.environment.width &&
 			0 < y && y < this.environment.height
-		) ? this.controller.isFree({x, y}) : false;
+		) ? !this.controller.isColliding({x, y}) : false;
 	}
 }
