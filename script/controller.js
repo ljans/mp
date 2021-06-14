@@ -33,7 +33,7 @@ export default class {
 	}
 
 	// Check if robot can be placed at (x,y) in environment
-	isColliding(x, y) {
+	isColliding({x, y}) {
 
 		// Extract relevant square from environment
 		let environmentData = this.environment.context.getImageData(
