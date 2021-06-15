@@ -32,13 +32,28 @@ robot-frame {
 	background-color: #FFF;
 }
 
+.wrapper {
+	position: relative;
+}
+
 .workspace {
 	position: relative;
+
+	img {
+		display: block;
+	}
 
 	robot-frame {
 		position: absolute;
 		z-index: 1;
 	}
+}
+
+.configspace {
+	position: absolute;
+	top: 0;
+	left: 0;
+	opacity: 0.3;
 }
 
 .sidebar {
