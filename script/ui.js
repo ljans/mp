@@ -1,5 +1,6 @@
 import Robot from './robot.js';
 import DragDrop from './dragDrop.js';
+import { Node } from './graph.js';
 
 export default class UI {
 
@@ -21,6 +22,7 @@ export default class UI {
 		this.workspace = document.querySelector('.ui .workspace');
 		this.configspace = document.querySelector('.ui .configspace');
 		this.environment = document.querySelector('.environment');
+		this.graph = document.querySelector('.ui .graph');
 	}
 
 
@@ -30,6 +32,10 @@ export default class UI {
 		this.environment.src = this.controller.environment.canvas.toDataURL();
 		await this.environment.decode();
 
+		// Setup graph
+		this.graph.height = this.environment.height;
+		this.graph.width = this.environment.width;
+
 		// Draw configspace
 		this.configspace.height = this.environment.height;
 		this.configspace.width = this.environment.width;
@@ -37,7 +43,7 @@ export default class UI {
 		let image = context.getImageData(0, 0, this.configspace.width, this.configspace.height);
 		for (let y = 0; y < this.configspace.height; y++) {
 			for (let x = 0; x < this.configspace.width; x++) {
-				let colliding = !this.isValidPosition({ x, y });
+				let colliding = this.controller.isInObstacle([x, y]);
 				let index = y * this.configspace.width + x;
 				image.data[4 * index] = colliding ? 255 : 0;
 				image.data[4 * index + 1] = colliding ? 0 : 255;
@@ -48,7 +54,7 @@ export default class UI {
 		context.putImageData(image, 0, 0);
 
 		// For each robot index
-		for (let index in [this.INIT_CONFIG, this.GOAL_CONFIG]) {
+		for (let index of [UI.INIT_CONFIG, UI.GOAL_CONFIG]) {
 
 			// Construct robot blueprint in its slot
 			this.blueprints[index] = new Robot();
@@ -91,12 +97,62 @@ export default class UI {
 		}
 	}
 
+	// Clear Graph
+	clearGraph() {
+		let context = this.graph.getContext('2d');
+		context.clearRect(0, 0, this.graph.width, this.graph.height);
+	}
+
+	// Draw graph
+	drawGraph(graph) {
+		this.clearGraph();
+		let context = this.graph.getContext('2d');
+
+		// Draw nodes
+		for (let node of graph.nodes) {
+			context.fillStyle = 'rgba(0,0,0,0.2)';
+			context.fillRect(node.coordinates[0] - 2, node.coordinates[1] - 2, 4, 4);
+		}
+
+		// Draw edges
+		for (let edge of graph.edges) {
+			context.beginPath();
+			context.lineWidth = 1;
+			context.strokeStyle = 'rgba(0,0,0,0.15)';
+			context.moveTo(edge[0].coordinates[0], edge[0].coordinates[1]);
+			context.lineTo(edge[1].coordinates[0], edge[1].coordinates[1]);
+			context.stroke();
+		}
+
+		// Draw path
+		for (let i = 0; i < graph.path.length; i++) {
+			let node = graph.path[i];
+			context.fillStyle = '#00F';
+			context.fillRect(node.coordinates[0] - 2, node.coordinates[1] - 2, 4, 4);
+
+			// Draw path edges
+			if (i == graph.path.length) continue;
+			for (let edge of node.adjacentEdges) {
+				let next = graph.path[i + 1];
+				if (next == edge.node) {
+					context.beginPath();
+					context.lineWidth = 2;
+					context.strokeStyle = '#00F';
+					context.moveTo(node.coordinates[0], node.coordinates[1]);
+					context.lineTo(next.coordinates[0], next.coordinates[1]);
+					context.stroke();
+					break;
+				}
+			}
+		}
+	}
+
 	// Spawn/despawn robot in workspace
 	spawn(robot) { this.workspace.appendChild(robot); }
 	despawn(robot) { this.workspace.removeChild(robot); }
 
 	// Place robot at (x,y)
-	trackMouse(index, { x, y }) {
+	trackMouse(index, [x, y]) {
 		this.robots[index].style.left = x + 'px';
 		this.robots[index].style.top = y + 'px';
 	}
@@ -105,30 +161,30 @@ export default class UI {
 	onDragStart(index, coordinates) {
 		document.body.classList.add('dragging');
 		this.trackMouse(index, coordinates);
+		this.clearGraph();
 	}
 
 	// Let robot follow the movement and check whether its position is valid on drag move
 	onDragMove(index, coordinates) {
 		this.trackMouse(index, coordinates);
-		this.robots[index].classList.toggle('colliding', !this.isValidPosition(coordinates));
+		this.robots[index].classList.toggle('colliding', !!this.controller.isInObstacle(coordinates));
 	}
 
-	// Reset the dragging state and store a valid drop location or despawn misplaced robot on drag end
+	// Reset the dragging state on drag end
 	onDragEnd(index, coordinates) {
 		document.body.classList.remove('dragging');
-		if (this.isValidPosition(coordinates)) this.robots[index].coordinates = coordinates;
-		else this.despawn(this.robots[index]), delete this.robots[index];
-	}
 
-	// Check if robot can be placed at (x,y)
-	isValidPosition({ x, y }) {
+		// Despawn misplaced robot
+		if (this.controller.isInObstacle(coordinates)) {
+			this.despawn(this.robots[index]);
+			delete this.robots[index];
 
-		let [xOffset, yOffset] = [this.controller.robot.width / 2, this.controller.robot.height / 2];
-
-		// Return whether robot is inside environment and free of collision
-		return (
-			xOffset <= x && x <= this.environment.width - xOffset &&
-			yOffset <= y && y <= this.environment.height - yOffset
-		) ? !this.controller.isInObstacle({ x, y }) : false;
+		// Store valid location and find path
+		} else {
+			this.robots[index].coordinates = coordinates;
+			let init = this.robots[UI.INIT_CONFIG];
+			let goal = this.robots[UI.GOAL_CONFIG];
+			if (init && goal) this.controller.findPath(new Node(init.coordinates), new Node(goal.coordinates));
+		}
 	}
 }

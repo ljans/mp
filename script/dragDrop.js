@@ -1,6 +1,6 @@
-export default class {	
+export default class {
 	constructor(referenceElement) {
-		
+
 		// Get bounding box of reference element
 		this.boundingBox = referenceElement.getBoundingClientRect();
 		window.addEventListener('resize', () => { this.boundingBox = referenceElement.getBoundingClientRect(); });
@@ -76,7 +76,7 @@ export default class {
 
 			// When the left mouse button is released again
 			document.addEventListener('mouseup', endEvent => {
-				if (endEvent.which !== 1) return;
+				if(endEvent.which !== 1) return;
 
 				// Stop movement tracker and invoke ending handler
 				document.removeEventListener('mousemove', tracker);
@@ -87,9 +87,9 @@ export default class {
 
 	// Transform emitter position to local coordinates
 	getCoordinates(e) {
-		return {
-			x: e.pageX - Math.round(this.boundingBox.x),
-			y: e.pageY - Math.round(this.boundingBox.y),
-		};
+		return [
+			e.pageX - Math.round(this.boundingBox.x),
+			e.pageY - Math.round(this.boundingBox.y)
+		];
 	}
 }

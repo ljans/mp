@@ -1,42 +1,46 @@
 <!DOCTYPE html>
 <html>
-	<head>
-		<meta charset="UTF-8">
-		<meta name="viewport" content="width=device-width, initial-scale=1.0">
-		<title>Motion Planning Demo</title>
-		
-		<link rel="stylesheet" href="style/view.css">
 
-		<script type="module" src="script/init.js"></script>
-	</head>
-	<body>
-		<div class="ui">
-			<div class="content">
-				<div class="wrapper">
-					<div class="workspace">
-						<img class="environment"></img>
-					</div>
-					<canvas class="configspace"></canvas>
-				</div>
-			</div>
-			
-			<div class="sidebar">
-				<div class="init configuration">
-					<div class="slot"></div>
-					<span>Initial config</span>
-				</div>
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Motion Planning Demo</title>
 
-				<div class="goal configuration">
-					<div class="slot"></div>
-					<span>Goal config</span>
+	<link rel="stylesheet" href="style/view.css">
+
+	<script type="module" src="script/init.js"></script>
+</head>
+
+<body>
+	<div class="ui">
+		<div class="content">
+			<div class="wrapper">
+				<div class="workspace">
+					<img class="environment"></img>
 				</div>
+				<canvas class="configspace"></canvas>
+				<canvas class="graph"></canvas>
 			</div>
 		</div>
 
-		<template>
-			<link rel="stylesheet" href="style/robot.css">
-			<slot></slot>
-			<div class="indicator"></div>
-		</template>
-	</body>
+		<div class="sidebar">
+			<div class="init configuration">
+				<div class="slot"></div>
+				<span>Initial config</span>
+			</div>
+
+			<div class="goal configuration">
+				<div class="slot"></div>
+				<span>Goal config</span>
+			</div>
+		</div>
+	</div>
+
+	<template>
+		<link rel="stylesheet" href="style/robot.css">
+		<slot></slot>
+		<div class="indicator"></div>
+	</template>
+</body>
+
 </html>

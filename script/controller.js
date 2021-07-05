@@ -1,5 +1,6 @@
 import BitmapCanvas from './bitmapCanvas.js';
 import UI from './ui.js';
+import MP from './mp.js';
 
 export default class {
 
@@ -24,12 +25,26 @@ export default class {
 	}
 
 	// Check if robot can be placed at (x,y) in environment
-	isInObstacle({ x, y }) {
-
+	isInObstacle([x, y]) {
 
 		// Iterate over all border pixels
 		for (let [dx, dy] of this.robot.border) {
-			if (!this.environment.binary[x + dx - this.robot.width / 2][y + dy - this.robot.height / 2]) return true;
+
+			let xCheck = x + dx - this.robot.width / 2;
+			let yCheck = y + dy - this.robot.height / 2;
+
+			if (!(
+				0 <= xCheck && xCheck < this.environment.width &&
+				0 <= yCheck && yCheck < this.environment.height
+			) || !this.environment.binary[xCheck][yCheck]) return true;
 		}
+	}
+
+	// Find a path and draw the graph
+	findPath(init, goal) {
+		let mp = new MP(this);
+		mp.sPRM(init, goal, 80, 1000);
+		mp.graph.findPathWithDijkstra(init, goal);
+		this.ui.drawGraph(mp.graph);
 	}
 }
